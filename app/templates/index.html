@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Tổng quan · QABooking{% endblock %}
+{% block body %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('bookings.index') }}">
+      <span class="brand-mark">QA</span>
+      <span class="brand-name">QABooking<small>WORKSPACE</small></span>
+    </a>
+    <div class="nav-caption">KHÔNG GIAN LÀM VIỆC</div>
+    <a class="nav-link active" href="{{ url_for('bookings.index') }}"><span class="nav-icon">▦</span>Tổng quan</a>
+    <a class="nav-link" href="#schedule"><span class="nav-icon">▤</span>Lịch đặt phòng</a>
+    <a class="nav-link" href="#rooms"><span class="nav-icon">▧</span>Phòng họp</a>
+    <div class="sidebar-bottom">
+      <div class="help-card"><span class="help-icon">?</span><strong>Cần hỗ trợ?</strong><p>Liên hệ bộ phận quản trị văn phòng.</p></div>
+      <div class="profile"><div class="avatar">QA</div><div><strong>Quản lý văn phòng</strong><small>Workspace admin</small></div><span class="dots">···</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><div class="breadcrumb">Không gian làm việc <span>/</span> <strong>Tổng quan</strong></div><div class="top-actions"><span class="today-label">● &nbsp;Hôm nay</span><div class="top-avatar">QA</div></div></header>
+    <section class="page-heading">
+      <div><p class="eyebrow">THỨC DẬY Ý TƯỞNG</p><h1>Không gian cho những<br class="mobile-break"> cuộc gặp hiệu quả.</h1><p class="page-subtitle">Quản lý lịch họp và tìm phòng phù hợp cho cả đội ngũ.</p></div>
+      <a class="primary-button" href="#booking-form"><span>＋</span> Đặt phòng họp</a>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% endwith %}
+
+    <section class="stats-grid">
+      <article class="stat-card"><div class="stat-top"><span class="stat-icon blue">▧</span><span class="stat-label">PHÒNG HỌP</span></div><div class="stat-number">{{ stats.room_count }}<span> phòng khả dụng</span></div><div class="stat-note">Sẵn sàng cho cuộc họp tiếp theo</div></article>
+      <article class="stat-card"><div class="stat-top"><span class="stat-icon violet">◷</span><span class="stat-label">LỊCH HÔM NAY</span></div><div class="stat-number">{{ stats.today_count }}<span> cuộc họp</span></div><div class="stat-note">Lịch đã xác nhận trong hôm nay</div></article>
+      <article class="stat-card"><div class="stat-top"><span class="stat-icon mint">↗</span><span class="stat-label">SẮP DIỄN RA</span></div><div class="stat-number">{{ stats.upcoming_count }}<span> cuộc họp</span></div><div class="stat-note">Các lịch họp chưa kết thúc</div></article>
+    </section>
+
+    <section class="content-grid">
+      <div class="panel schedule-panel" id="schedule">
+        <div class="panel-heading"><div><p class="eyebrow">WORKSPACE CALENDAR</p><h2>Lịch phòng họp</h2></div><form class="date-filter" method="get" action="{{ url_for('bookings.index') }}"><input aria-label="Lọc theo ngày" type="date" name="date" value="{{ selected_date }}"><button type="submit">Lọc</button>{% if selected_date %}<a href="{{ url_for('bookings.index') }}">Xóa</a>{% endif %}</form></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>CUỘC HỌP</th><th>PHÒNG</th><th>THỜI GIAN</th><th>NGƯỜI TỔ CHỨC</th><th></th></tr></thead>
+            <tbody>
+              {% for item in bookings %}
+              <tr><td><div class="meeting-title">{{ item.title }}</div><div class="subtext">{{ item.department }} · {{ item.attendee_count }} người</div></td><td><span class="room-name">{{ item.room_name }}</span><div class="subtext">{{ item.room_location }}</div></td><td><span class="time-pill">{{ item.start_time.strftime('%d/%m · %H:%M') }}</span><div class="subtext">đến {{ item.end_time.strftime('%H:%M') }}</div></td><td>{{ item.organizer }}</td><td><form method="post" action="{{ url_for('bookings.cancel', booking_id=item.id) }}" onsubmit="return confirm('Bạn có chắc muốn hủy lịch họp này?')"><button class="icon-button" title="Hủy lịch" aria-label="Hủy lịch">×</button></form></td></tr>
+              {% else %}
+              <tr><td colspan="5"><div class="empty-state"><span>◷</span><strong>Chưa có lịch họp nào</strong><p>{% if selected_date %}Không có lịch họp trong ngày đã chọn.{% else %}Các lịch họp sắp tới sẽ xuất hiện ở đây.{% endif %}</p></div></td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="panel-footer"><span>Hiển thị {{ bookings|length }} lịch họp sắp tới</span><span class="live-status"><i></i> Đồng bộ trực tiếp</span></div>
+      </div>
+
+      <div class="side-column">
+        <section class="panel booking-panel" id="booking-form">
+          <div class="panel-heading compact"><div><p class="eyebrow">NEW RESERVATION</p><h2>Đặt phòng mới</h2></div><span class="form-sparkle">✳</span></div>
+          {% if rooms %}
+          <form class="booking-form" method="post" action="{{ url_for('bookings.create') }}">
+            <label>Chủ đề cuộc họp<input name="title" maxlength="200" placeholder="Ví dụ: Họp kế hoạch tháng 11" required></label>
+            <div class="form-row"><label>Người tổ chức<input name="organizer" maxlength="120" placeholder="Họ và tên" required></label><label>Phòng họp<select name="room_id" required><option value="" disabled selected>Chọn phòng</option>{% for room in rooms %}<option value="{{ room.id }}">{{ room.name }} · {{ room.capacity }} chỗ</option>{% endfor %}</select></label></div>
+            <div class="form-row"><label>Phòng ban<input name="department" maxlength="100" placeholder="Ví dụ: Marketing" required></label><label>Số người<input name="attendee_count" type="number" min="1" value="2" required></label></div>
+            <div class="form-row"><label>Bắt đầu<input name="start_time" type="datetime-local" min="{{ today }}T00:00" required></label><label>Kết thúc<input name="end_time" type="datetime-local" min="{{ today }}T00:00" required></label></div>
+            <button type="submit" class="submit-button">Xác nhận đặt phòng <span>→</span></button>
+            <p class="form-hint">Lịch trùng giờ và vượt sức chứa sẽ được tự động từ chối.</p>
+          </form>
+          {% else %}
+          <div class="empty-rooms">Chưa có phòng họp khả dụng. Vui lòng thêm phòng trong cơ sở dữ liệu.</div>
+          {% endif %}
+        </section>
+        <section class="room-list panel" id="rooms"><div class="room-heading"><div><p class="eyebrow">YOUR SPACES</p><h2>Phòng họp</h2></div><span class="room-count">{{ rooms|length }}</span></div>
+          {% for room in rooms %}<div class="room-item"><div class="room-symbol">⌂</div><div class="room-info"><strong>{{ room.name }}</strong><span>{{ room.location }} · {{ room.capacity }} chỗ</span></div><span class="room-indicator" title="Khả dụng"></span></div>{% else %}<p class="subtext room-empty">Chưa có phòng họp.</p>{% endfor %}
+        </section>
+      </div>
+    </section>
+    <footer class="page-footer"><span>QABooking <span class="footer-dot">·</span> Nền tảng đặt phòng nội bộ</span><span>Được thiết kế cho những cuộc gặp tốt hơn <span class="heart">♥</span></span></footer>
+  </main>
+</div>
+{% endblock %}

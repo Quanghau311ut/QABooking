@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Không kết nối được cơ sở dữ liệu · QABooking{% endblock %}
+{% block body %}
+<main class="error-page"><div class="error-icon">!</div><p class="eyebrow">KẾT NỐI CƠ SỞ DỮ LIỆU</p><h1>Chưa thể tải dữ liệu</h1><p>QABooking không kết nối được SQL Server. Hãy kiểm tra cấu hình kết nối và đảm bảo đã chạy <code>database/schema.sql</code>.</p><a class="primary-button" href="{{ url_for('bookings.index') }}">Thử lại</a></main>
+{% endblock %}
